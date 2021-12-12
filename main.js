@@ -30,11 +30,6 @@ const $arenas = document.querySelector('.arenas');
 const $randomButton = document.querySelector('.button');
 
 /**
- * Флаг наличия проигравших
- */
-let noLosers = true;
-
-/**
  * Формирование частей арены
  * @param tag {string} - тип узла DOM-дерева
  * @param className {string} - стиль узла DOM-дерева
@@ -86,11 +81,15 @@ const changeHP = player => {
   const $playerLife = document.querySelector('.player' + player.player + ' .life');
   player.hp -= getHPDelta();
   $playerLife.style.width = (player.hp < 0 ? 0 : player.hp) + '%';
-  if (!noLosers && player.hp > 0) {
-    $arenas.append(playerWin(player.name));
+};
+
+const checkRoundResults = (player1, player2) => {
+  if (player1.hp > 0 && player2.hp < 0) {
+    $arenas.append(playerWin(player1.name));
     $randomButton.disabled = true;
-  } else if (player.hp < 0) {
-    noLosers = false;
+  } else if (player1.hp < 0 && player2.hp > 0) {
+    $arenas.append(playerWin(player2.name));
+    $randomButton.disabled = true;
   }
 };
 
@@ -121,6 +120,7 @@ const playerWin = (name) => {
 $arenas.append(createPlayer(player1), createPlayer(player2));
 
 $randomButton.addEventListener('click', () => {
-  changeHP(player2);
   changeHP(player1);
+  changeHP(player2);
+  checkRoundResults(player1, player2);
 });
