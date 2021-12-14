@@ -2,59 +2,125 @@
  * Игроки
  */
 const player1 = {
-name: 'Kitana',
-  hp: 50,
+  player: 1,
+  name: 'Kitana',
+  hp: 100,
   img: 'http://reactmarathon-api.herokuapp.com/assets/kitana.gif',
   weapon: ['sable', 'arrows', 'knives'],
-  attack: function() {
-  console.log(this.name + ' - Fight...')
+  attack: function () {
+    console.log(this.name + ' - Fight...');
   }
 };
 
 const player2 = {
+  player: 2,
   name: 'Sonya',
-  hp: 80,
+  hp: 100,
   img: 'http://reactmarathon-api.herokuapp.com/assets/sonya.gif',
   weapon: ['gun', 'bat'],
-  attack: function() {
-    console.log(this.name + ' - Fight...')
+  attack: function () {
+    console.log(this.name + ' - Fight...');
   }
-}
-
-/**
- * Фабрика
- * @param type {string} - тип игрока
- * @param player {object} - объект игрока
- */
-const createPlayer = (type, player) => {
-  const playerNode = document.createElement('div');
-  playerNode.className = type;
-
-  const progressbarNode = document.createElement('div');
-  progressbarNode.className = 'progressbar';
-
-  const lifeNode = document.createElement('div');
-  lifeNode.className = 'life';
-  lifeNode.style.width = player.hp + '%';
-
-  const nameNode = document.createElement('div');
-  nameNode.className = 'name';
-  nameNode.innerHTML = player.name;
-
-  progressbarNode.append(lifeNode, nameNode);
-
-  const characterNode = document.createElement('div');
-  characterNode.className = 'character';
-
-  const imgNode = document.createElement('img');
-  imgNode.src = player.img;
-
-  characterNode.append(imgNode);
-
-  playerNode.append(progressbarNode, characterNode);
-  document.getElementsByClassName('arenas')[0].append(playerNode);
 };
 
-createPlayer('player1', player1);
-createPlayer('player2', player2);
+/**
+ * Узлы DOM-дерева
+ */
+const $arenas = document.querySelector('.arenas');
+const $randomButton = document.querySelector('.button');
 
+/**
+ * Формирование частей арены
+ * @param tag {string} - тип узла DOM-дерева
+ * @param className {string} - стиль узла DOM-дерева
+ */
+const createElement = (tag, className) => {
+  const $node = document.createElement(tag);
+  className && ($node.className = className);
+
+  return $node;
+};
+
+/**
+ * Фабрика игроков
+ * @param playerObj {object} - объект игрока
+ */
+const createPlayer = playerObj => {
+  const $player = createElement('div', 'player' + playerObj.player);
+
+  const $progressbar = createElement('div', 'progressbar');
+  const $character = createElement('div', 'character');
+
+  $player.append($progressbar, $character);
+
+  const $life = createElement('div', 'life');
+  $life.style.width = playerObj.hp + '%';
+
+  const $name = createElement('div', 'name');
+  $name.innerText = playerObj.name;
+
+  $progressbar.append($life, $name);
+
+  const $img = createElement('img');
+  $img.src = playerObj.img;
+  $character.append($img);
+
+  return $player;
+};
+
+/**
+ * Вычисление дельты, на которую сократить жизнь игрока
+ */
+const getHPDelta = () => ~~(Math.random() * 100 % 20);
+
+/**
+ * Сокращение жизни игрока + определение победителя
+ * @param player - объект игрока
+ */
+const changeHP = player => {
+  const $playerLife = document.querySelector('.player' + player.player + ' .life');
+  player.hp -= getHPDelta();
+  $playerLife.style.width = (player.hp < 0 ? 0 : player.hp) + '%';
+};
+
+const checkRoundResults = (player1, player2) => {
+  if (player1.hp > 0 && player2.hp < 0) {
+    $arenas.append(playerWin(player1.name));
+    $randomButton.disabled = true;
+  } else if (player1.hp < 0 && player2.hp > 0) {
+    $arenas.append(playerWin(player2.name));
+    $randomButton.disabled = true;
+  }
+};
+
+/**
+ * Формирование надписи проигрыша
+ * @param name - имя игрока
+ * @returns {HTMLElement} - div с надписью
+ */
+const playerLose = (name) => {
+  const $loseTitle = createElement('div', 'loseTitle');
+  $loseTitle.innerText = name + ' lose';
+
+  return $loseTitle;
+};
+
+/**
+ * Формирование надписи выигрыша
+ * @param name - имя игрока
+ * @returns {HTMLElement} - div с надписью
+ */
+const playerWin = (name) => {
+  const $winTitle = createElement('div', 'loseTitle');
+  $winTitle.innerText = name + ' wins';
+
+  return $winTitle;
+};
+
+$arenas.append(createPlayer(player1), createPlayer(player2));
+
+$randomButton.addEventListener('click', () => {
+  changeHP(player1);
+  changeHP(player2);
+  checkRoundResults(player1, player2);
+});
