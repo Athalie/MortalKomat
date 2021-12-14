@@ -9,7 +9,10 @@ const player1 = {
   weapon: ['sable', 'arrows', 'knives'],
   attack: function () {
     console.log(this.name + ' - Fight...');
-  }
+  },
+  changeHP: changeHP,
+  elHP: elHP,
+  renderHP: renderHP
 };
 
 const player2 = {
@@ -20,7 +23,10 @@ const player2 = {
   weapon: ['gun', 'bat'],
   attack: function () {
     console.log(this.name + ' - Fight...');
-  }
+  },
+  changeHP: changeHP,
+  elHP: elHP,
+  renderHP: renderHP
 };
 
 /**
@@ -34,18 +40,18 @@ const $randomButton = document.querySelector('.button');
  * @param tag {string} - тип узла DOM-дерева
  * @param className {string} - стиль узла DOM-дерева
  */
-const createElement = (tag, className) => {
+function createElement (tag, className) {
   const $node = document.createElement(tag);
   className && ($node.className = className);
 
   return $node;
-};
+}
 
 /**
  * Фабрика игроков
  * @param playerObj {object} - объект игрока
  */
-const createPlayer = playerObj => {
+function createPlayer (playerObj) {
   const $player = createElement('div', 'player' + playerObj.player);
 
   const $progressbar = createElement('div', 'progressbar');
@@ -66,61 +72,106 @@ const createPlayer = playerObj => {
   $character.append($img);
 
   return $player;
-};
+}
 
 /**
  * Вычисление дельты, на которую сократить жизнь игрока
  */
-const getHPDelta = () => ~~(Math.random() * 100 % 20);
+const getRandom = range => ~~(Math.random() * 100 % range);
 
 /**
  * Сокращение жизни игрока + определение победителя
  * @param player - объект игрока
  */
-const changeHP = player => {
-  const $playerLife = document.querySelector('.player' + player.player + ' .life');
-  player.hp -= getHPDelta();
-  $playerLife.style.width = (player.hp < 0 ? 0 : player.hp) + '%';
-};
-
-const checkRoundResults = (player1, player2) => {
-  if (player1.hp > 0 && player2.hp < 0) {
-    $arenas.append(playerWin(player1.name));
-    $randomButton.disabled = true;
-  } else if (player1.hp < 0 && player2.hp > 0) {
-    $arenas.append(playerWin(player2.name));
-    $randomButton.disabled = true;
+// function changeHP (player) {
+//   const $playerLife = document.querySelector('.player' + player.player + ' .life');
+//   player.hp -= getRandom(20);
+//   $playerLife.style.width = (player.hp < 0 ? player.hp = 0 : player.hp) + '%';
+// }
+/**
+ * Решает, нужно ли отнимать или ставить HP = 0
+ * @param hpDelta - кол-во, на которое надо изменять HP
+ */
+function changeHP (hpDelta) {
+  this.hp -= hpDelta;
+  if (this.hp < 0) {
+    this.hp = 0;
   }
-};
+}
 
 /**
- * Формирование надписи проигрыша
- * @param name - имя игрока
- * @returns {HTMLElement} - div с надписью
+ * Обращается к жизням игрока
+ * @returns {Element}
  */
-const playerLose = (name) => {
-  const $loseTitle = createElement('div', 'loseTitle');
-  $loseTitle.innerText = name + ' lose';
+function elHP() {
+  return document.querySelector('.player' + this.player + ' .life');
+}
 
-  return $loseTitle;
-};
+/**
+ * Отрисовывает hp
+ */
+function renderHP() {
+    this.elHP().style.width = this.hp + '%';
+}
 
 /**
  * Формирование надписи выигрыша
  * @param name - имя игрока
  * @returns {HTMLElement} - div с надписью
  */
-const playerWin = (name) => {
+function showResultText (name) {
   const $winTitle = createElement('div', 'loseTitle');
-  $winTitle.innerText = name + ' wins';
+  if (name) {
+    $winTitle.innerText = name + ' wins';
+  } else {
+    $winTitle.innerText = 'draw';
+  }
 
   return $winTitle;
-};
+}
+
+/**
+ * Показывает кнопку перезагрузки игры
+ */
+function createReloadButton() {
+  const $reloadWrap = document.createElement('div');
+  $reloadWrap.className = 'reloadWrap';
+
+  const $reloadButton = document.createElement('button');
+  $reloadButton.className = 'button';
+  $reloadButton.innerText = 'Restart';
+  $reloadButton.addEventListener('click', () => window.location.reload());
+
+  $reloadWrap.append($reloadButton);
+  $arenas.append($reloadWrap);
+}
+
+/**
+ * Действия по окончании игры
+ * @param text
+ */
+function gameOverActions(text) {
+  $arenas.append(showResultText(text));
+  createReloadButton();
+}
 
 $arenas.append(createPlayer(player1), createPlayer(player2));
 
 $randomButton.addEventListener('click', () => {
-  changeHP(player1);
-  changeHP(player2);
-  checkRoundResults(player1, player2);
+  player1.changeHP(getRandom(20));
+  player1.renderHP();
+  player2.changeHP(getRandom(20));
+  player2.renderHP();
+
+  if (player1.hp === 0 || player2.hp === 0) {
+    $randomButton.disabled = true;
+  }
+
+  if (player1.hp === 0 && player1.hp < player2.hp) {
+    gameOverActions(player2.name);
+  } else if (player2.hp === 0 && player2.hp < player1.hp) {
+    gameOverActions(player1.name);
+  } else if (player1.hp === 0 && player2.hp === 0) {
+    gameOverActions();
+  }
 });
