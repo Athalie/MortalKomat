@@ -1,6 +1,7 @@
 import { player1, player2 } from './player.js';
-import { ATTACK, HIT, logs } from './consts.js';
-import { $chat, $formFight, $arenas } from './nodes.js';
+import { ATTACK, HIT } from './consts.js';
+import { $formFight, $arenas } from './nodes.js';
+import { generateLogs } from './logs.js';
 
 /**
  * Вычисление дельты, на которую сократить жизнь игрока
@@ -39,8 +40,8 @@ const createReloadButton = () => {
  * Фабрика игроков
  * @param playerObj {object} - объект игрока
  */
-const createPlayer = playerObj => {
-  const $player = createElement('div', 'player' + playerObj.player);
+const createPlayer = ({ player, name, hp, img }) => {
+  const $player = createElement('div', 'player' + player);
 
   const $progressbar = createElement('div', 'progressbar');
   const $character = createElement('div', 'character');
@@ -48,15 +49,15 @@ const createPlayer = playerObj => {
   $player.append($progressbar, $character);
 
   const $life = createElement('div', 'life');
-  $life.style.width = playerObj.hp + '%';
+  $life.style.width = hp + '%';
 
   const $name = createElement('div', 'name');
-  $name.innerText = playerObj.name;
+  $name.innerText = name;
 
   $progressbar.append($life, $name);
 
   const $img = createElement('img');
-  $img.src = playerObj.img;
+  $img.src = img;
   $character.append($img);
 
   return $player;
@@ -140,39 +141,6 @@ const playerAttack = () => {
   return attack;
 };
 
-/**
- * Генерация лога
- */
-function generateLogs (type, player1, player2) {
-  const range = logs[type].length;
-  const timestamp = new Date().toLocaleTimeString().replace(/:..$/, '');
-  let text = '';
-  let logItem = null;
-  switch (type) {
-    case 'start':
-      text = logs[type].replace(/\[time\]/, timestamp).replace(/\[player1\]/, player1.name)
-        .replace(/\[player2\]/, player2.name);
-      logItem = `<p>${ timestamp } ${ text }</p>`;
-      break;
-    case 'hit':
-    case 'defence':
-      text = logs[type][getRandom(range)].replace(/\[playerKick\]/, player1.name)
-        .replace(/\[playerDefence\]/, player2.name).replace('[time]', timestamp);
-      logItem = `<p>${ timestamp } ${ text } -${ 100 - player2.hp } [${ player2.hp } / 100]</p>`;
-      break;
-    case 'end':
-      text = logs[type][getRandom(range)].replace(/\[playerWins\]/, player1.name)
-        .replace(/\[playerLose\]/, player2.name).replace('[time]', timestamp);
-      logItem = `<p>${ timestamp } ${ text } -${ 100 - player2.hp } [${ player2.hp } / 100]</p>`;
-      break;
-    case 'draw':
-      text = logs[type];
-      logItem = `<p>${ timestamp } ${ text }</p>`;
-  }
-
-  $chat.insertAdjacentHTML('afterbegin', logItem);
-}
-
 export {
   getRandom,
   createElement,
@@ -182,5 +150,4 @@ export {
   enemyAttack,
   playerAttack,
   showResult,
-  generateLogs
 };
