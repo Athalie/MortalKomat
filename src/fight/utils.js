@@ -1,4 +1,3 @@
-import { player1, player2 } from './player.js';
 import { ATTACK, HIT } from './consts.js';
 import { $formFight, $arenas } from './nodes.js';
 import { generateLogs } from './logs.js';
@@ -37,33 +36,6 @@ const createReloadButton = () => {
 };
 
 /**
- * Фабрика игроков
- * @param playerObj {object} - объект игрока
- */
-const createPlayer = ({ player, name, hp, img }) => {
-  const $player = createElement('div', 'player' + player);
-
-  const $progressbar = createElement('div', 'progressbar');
-  const $character = createElement('div', 'character');
-
-  $player.append($progressbar, $character);
-
-  const $life = createElement('div', 'life');
-  $life.style.width = hp + '%';
-
-  const $name = createElement('div', 'name');
-  $name.innerText = name;
-
-  $progressbar.append($life, $name);
-
-  const $img = createElement('img');
-  $img.src = img;
-  $character.append($img);
-
-  return $player;
-};
-
-/**
  * Формирование надписи выигрыша
  * @param name - имя игрока
  * @returns {HTMLElement} - div с надписью
@@ -95,7 +67,7 @@ const gameOverActions = (winner, loser) => {
   createReloadButton();
 };
 
-const showResult = () => {
+const showResult = (player1, player2) => {
   if (player1.hp === 0 && player1.hp < player2.hp) {
     gameOverActions(player2, player1);
   } else if (player2.hp === 0 && player2.hp < player1.hp) {
@@ -110,44 +82,10 @@ const proccedFight = (player, damage) => {
   player.renderHP();
 };
 
-const enemyAttack = () => {
-  const hit = ATTACK[getRandom(3)];
-  const defence = ATTACK[getRandom(3)];
-
-  return {
-    value: getRandom(HIT[hit]),
-    hit,
-    defence
-  };
-};
-
-const playerAttack = () => {
-  const attack = {};
-
-  for (let item of $formFight) {
-    if (item.checked && item.name === 'hit') {
-      attack.value = getRandom(HIT[item.value]);
-      attack.hit = item.value;
-    }
-
-    if (item.checked && item.name === 'defence') {
-      attack.value = getRandom(HIT[item.value]);
-      attack.defence = item.value;
-    }
-
-    item.checked = false;
-  }
-
-  return attack;
-};
-
 export {
   getRandom,
   createElement,
-  createPlayer,
   gameOverActions,
   proccedFight,
-  enemyAttack,
-  playerAttack,
   showResult,
 };
